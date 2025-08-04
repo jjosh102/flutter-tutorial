@@ -3,20 +3,28 @@ import 'package:flutter/material.dart';
 const width = 150.0;
 const height = 150.0;
 
+class CustomContainerConfig {
+  final List<Color> gradientColors;
+  final String containerText;
+
+  const CustomContainerConfig({
+    this.gradientColors = defaultGradientColors,
+    required this.containerText,
+  });
+
+  static const defaultGradientColors = [
+    Color.fromARGB(255, 39, 44, 56),
+    Color.fromARGB(255, 31, 35, 45),
+  ];
+}
+
 class CustomContainer extends StatelessWidget {
-  const CustomContainer({super.key});
+  const CustomContainer(this.config, {super.key});
+  final CustomContainerConfig config;
+
   @override
   Widget build(BuildContext context) => Container(
-    decoration: const BoxDecoration(
-      gradient: LinearGradient(
-        colors: [
-          Color.fromRGBO(94, 144, 194, 1),
-          Color.fromRGBO(94, 144, 194, 0.5),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    ),
+    color: const Color.fromARGB(255, 39, 44, 56),
     child: Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -49,11 +57,14 @@ class CustomContainer extends StatelessWidget {
                   Object exception,
                   StackTrace? stackTrace,
                 ) {
-                  return Text('Could not load image');
+                  return const Text('Could not load image');
                 },
           ),
-          SizedBox(height: 20),
-          Text('jjosh102!'),
+          const SizedBox(height: 20),
+          Text(
+            config.containerText,
+            style: const TextStyle(color: Color.fromARGB(255, 233, 234, 236)),
+          ),
         ],
       ),
     ),

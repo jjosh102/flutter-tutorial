@@ -1,25 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-void main() {
-  runApp(
-    MultiProvider(
-      providers: [
-        Provider<CounterRepository>(
-          create: (_) => CounterRepositoryImpl(),
-        ),
-        ProxyProvider<CounterRepository, IncrementCounter>(
-          update: (_, repo, __) => IncrementCounter(repo),
-        ),
-        ChangeNotifierProxyProvider<IncrementCounter, CounterViewModel>(
-          create: (_) => CounterViewModel(null),
-          update: (_, useCase, vm) => vm!..updateUseCase(useCase),
-        ),
-      ],
-      child: MyApp(),
-    ),
-  );
-}
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // ==================== Domain ====================
 
@@ -41,15 +21,32 @@ class CounterRepositoryImpl implements CounterRepository {
 
   @override
   Future<int> increment() async {
-    await Future.delayed(Duration(milliseconds: 400)); // simulate delay
+    await Future.delayed(const Duration(milliseconds: 400));
     return ++_count;
   }
 }
 
+// ==================== Providers ====================
+
+final counterRepositoryProvider = Provider<CounterRepository>((ref) {
+  return CounterRepositoryImpl();
+});
+
+final incrementCounterProvider = Provider<IncrementCounter>((ref) {
+  final repo = ref.read(counterRepositoryProvider);
+  return IncrementCounter(repo);
+});
+
+final counterViewModelProvider =
+    ChangeNotifierProvider<CounterViewModel>((ref) {
+  final useCase = ref.read(incrementCounterProvider);
+  return CounterViewModel(useCase);
+});
+
 // ==================== Presentation ====================
 
 class CounterViewModel extends ChangeNotifier {
-  IncrementCounter? _incrementCounter;
+  final IncrementCounter _incrementCounter;
   int _count = 0;
   bool _isLoading = false;
 
@@ -58,17 +55,11 @@ class CounterViewModel extends ChangeNotifier {
   int get count => _count;
   bool get isLoading => _isLoading;
 
-  void updateUseCase(IncrementCounter useCase) {
-    _incrementCounter = useCase;
-  }
-
   Future<void> increment() async {
-    if (_incrementCounter == null) return;
-
     _isLoading = true;
     notifyListeners();
 
-    _count = await _incrementCounter!();
+    _count = await _incrementCounter();
 
     _isLoading = false;
     notifyListeners();
@@ -77,6 +68,10 @@ class CounterViewModel extends ChangeNotifier {
 
 // ==================== UI ====================
 
+void main() {
+  runApp(const ProviderScope(child: MyApp()));
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -84,21 +79,35 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(title: Text("Clean Arch + Provider + Async")),
-        body: Consumer<CounterViewModel>(
-          builder: (_, vm, __) => Center(
-            child: vm.isLoading
-                ? CircularProgressIndicator()
-                : Text("Count: ${vm.count}", style: TextStyle(fontSize: 32)),
-          ),
-        ),
-        floatingActionButton: Consumer<CounterViewModel>(
-          builder: (_, vm, __) => FloatingActionButton(
-            onPressed: vm.increment,
-            child: Icon(Icons.add),
-          ),
-        ),
+        appBar: AppBar(title: const Text("Riverpod + Clean Architecture")),
+        body: const Center(child: CountDisplay()),
+        floatingActionButton: const IncrementButton(),
       ),
+    );
+  }
+}
+
+class CountDisplay extends ConsumerWidget {
+  const CountDisplay({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final vm = ref.watch(counterViewModelProvider);
+    return vm.isLoading
+        ? const CircularProgressIndicator()
+        : Text("Count: ${vm.count}", style: const TextStyle(fontSize: 32));
+  }
+}
+
+class IncrementButton extends ConsumerWidget {
+  const IncrementButton({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final vm = ref.read(counterViewModelProvider);
+    return FloatingActionButton(
+      onPressed: vm.increment,
+      child: const Icon(Icons.add),
     );
   }
 }

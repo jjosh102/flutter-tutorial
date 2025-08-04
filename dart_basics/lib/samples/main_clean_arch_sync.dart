@@ -1,25 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-void main() {
-  runApp(
-    MultiProvider(
-      providers: [
-        Provider<CounterRepository>(
-          create: (_) => CounterRepositoryImpl(),
-        ),
-        ProxyProvider<CounterRepository, IncrementCounter>(
-          update: (_, repo, __) => IncrementCounter(repo),
-        ),
-        ChangeNotifierProxyProvider<IncrementCounter, CounterViewModel>(
-          create: (_) => CounterViewModel(null),
-          update: (_, useCase, vm) => vm!..updateUseCase(useCase),
-        ),
-      ],
-      child: MyApp(),
-    ),
-  );
-}
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // ==================== Domain ====================
 
@@ -43,29 +23,44 @@ class CounterRepositoryImpl implements CounterRepository {
   int increment() => ++_count;
 }
 
+// ==================== Providers ====================
+
+final counterRepositoryProvider = Provider<CounterRepository>((ref) {
+  return CounterRepositoryImpl();
+});
+
+final incrementCounterProvider = Provider<IncrementCounter>((ref) {
+  final repo = ref.read(counterRepositoryProvider);
+  return IncrementCounter(repo);
+});
+
+final counterViewModelProvider =
+    ChangeNotifierProvider<CounterViewModel>((ref) {
+  final useCase = ref.read(incrementCounterProvider);
+  return CounterViewModel(useCase);
+});
+
 // ==================== Presentation ====================
 
 class CounterViewModel extends ChangeNotifier {
-  IncrementCounter? _incrementCounter;
+  IncrementCounter _incrementCounter;
   int _count = 0;
 
   CounterViewModel(this._incrementCounter);
 
   int get count => _count;
 
-  void updateUseCase(IncrementCounter useCase) {
-    _incrementCounter = useCase;
-  }
-
   void increment() {
-    if (_incrementCounter != null) {
-      _count = _incrementCounter!();
-      notifyListeners();
-    }
+    _count = _incrementCounter();
+    notifyListeners();
   }
 }
 
 // ==================== UI ====================
+
+void main() {
+  runApp(const ProviderScope(child: MyApp()));
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -74,19 +69,35 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(title: Text("Clean Arch with Provider")),
-        body: Consumer<CounterViewModel>(
-          builder: (_, vm, __) => Center(
-            child: Text("Count: ${vm.count}", style: TextStyle(fontSize: 32)),
-          ),
+        appBar: AppBar(title: const Text("Clean Arch with Riverpod")),
+        body: const Center(
+          child: CountDisplay(),
         ),
-        floatingActionButton: Consumer<CounterViewModel>(
-          builder: (_, vm, __) => FloatingActionButton(
-            onPressed: vm.increment,
-            child: Icon(Icons.add),
-          ),
-        ),
+        floatingActionButton: const IncrementButton(),
       ),
+    );
+  }
+}
+
+class CountDisplay extends ConsumerWidget {
+  const CountDisplay({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final vm = ref.watch(counterViewModelProvider);
+    return Text("Count: ${vm.count}", style: const TextStyle(fontSize: 32));
+  }
+}
+
+class IncrementButton extends ConsumerWidget {
+  const IncrementButton({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final vm = ref.read(counterViewModelProvider);
+    return FloatingActionButton(
+      onPressed: vm.increment,
+      child: const Icon(Icons.add),
     );
   }
 }

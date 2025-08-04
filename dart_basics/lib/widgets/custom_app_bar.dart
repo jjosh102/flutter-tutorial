@@ -6,6 +6,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      backgroundColor: const Color.fromARGB(255, 1, 4, 9),
       leading: Padding(
         padding: const EdgeInsets.only(left: 12),
         child: GestureDetector(
@@ -29,14 +30,17 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             backgroundImage: NetworkImage(
               'https://avatars.githubusercontent.com/u/50490077?v=4',
               scale: .5,
-              
             ),
           ),
         ),
       ),
       title: const Text(
-        'Dart Basics App',
-        style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+        'jjosh102',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+          color: Color.fromARGB(255, 240, 246, 252),
+        ),
       ),
     );
   }
