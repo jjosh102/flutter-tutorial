@@ -113,16 +113,16 @@ GithubRepo _$GithubRepoFromJson(Map<String, dynamic> json) => GithubRepo(
   labelsUrl: json['labelsUrl'] as String?,
   releasesUrl: json['releasesUrl'] as String?,
   deploymentsUrl: json['deploymentsUrl'] as String?,
-  createdAt: json['createdAt'] != null
-      ? DateTime.parse(json['createdAt'])
+  createdAt: json['created_at'] != null
+      ? DateTime.parse(json['created_at'])
       : DateTime.fromMillisecondsSinceEpoch(0),
 
-  updatedAt: json['updatedAt'] != null
-      ? DateTime.parse(json['updatedAt'])
+  updatedAt: json['updated_at'] != null
+      ? DateTime.parse(json['updated_at'])
       : DateTime.fromMillisecondsSinceEpoch(0),
 
-  pushedAt: json['pushedAt'] != null
-      ? DateTime.parse(json['pushedAt'])
+  pushedAt: json['pushed_at'] != null
+      ? DateTime.parse(json['pushed_at'])
       : DateTime.fromMillisecondsSinceEpoch(0),
   gitUrl: json['gitUrl'] as String?,
   sshUrl: json['sshUrl'] as String?,
