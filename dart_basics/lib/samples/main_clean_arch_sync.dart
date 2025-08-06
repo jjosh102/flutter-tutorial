@@ -43,7 +43,7 @@ final counterViewModelProvider =
 // ==================== Presentation ====================
 
 class CounterViewModel extends ChangeNotifier {
-  IncrementCounter _incrementCounter;
+  final IncrementCounter _incrementCounter;
   int _count = 0;
 
   CounterViewModel(this._incrementCounter);
