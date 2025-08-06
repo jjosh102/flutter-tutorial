@@ -1,3 +1,4 @@
+import 'package:dart_basics/screens/repo_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/github_repo_provider.dart';
@@ -51,22 +52,38 @@ class RepoListScreen extends ConsumerWidget {
       ),
       body: asyncRepos.when(
         data: (repos) => ListView.builder(
-           
           itemCount: repos.length,
           itemBuilder: (context, index) {
             final repo = repos[index];
             return RepoTile(
               repo: repo,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Selected: ${repo.name ?? 'No Repo Name'}')),
-                );
-              },
+              onTap: () =>
+                  navigateWithSlide(context, RepoDetailScreen(repo: repo)),
             );
           },
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Error: $err')),
+      ),
+    );
+  }
+
+  void navigateWithSlide(BuildContext context, Widget page) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (_, animation, _) => page,
+        transitionsBuilder: (_, animation, _, child) {
+          const begin = Offset(0.0, 1.0); // Slide from bottom
+          const end = Offset.zero;
+          final tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: Curves.easeOut));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
       ),
     );
   }
